@@ -1,0 +1,3 @@
+class PastesController < ApplicationController
+
+end
