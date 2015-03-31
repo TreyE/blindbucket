@@ -156,7 +156,10 @@ function submitPaste() {
 
     var randomkey = sjcl.codec.base64.fromBits(sjcl.random.randomWords(8, 0), 0);
     $('#encryption_key').val(randomkey);
-    var cipherdata = zeroCipher(randomkey, $('textarea#message').val());
+    var pt_message = $('textarea#message').val();
+    var cipherdata = zeroCipher(randomkey, pt_message);
+    var burnkey_value = sjcl.codec.base64.fromBits(sjcl.hash.sha256.hash(compress(pt_message)));
+    $('#burnkey').val(burnkey_value);
     $('#ciphermessage').val(JSON.stringify(cipherdata));
     var create_paste_form = $('#create_paste_form');
     $.ajax({

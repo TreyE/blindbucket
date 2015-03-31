@@ -1,4 +1,4 @@
 var paste_key = $('#encryption_key').val();
 $('#paste_details').replaceWith("<%= escape_javascript (render partial: "paste_details", formats: ["html"]) %>");
-$('#paste_link').html($('#paste_link').text() + "#" + paste_key);
+$('#paste_link').text($('#paste_link').text() + "#" + paste_key);
 $('#status').hide();

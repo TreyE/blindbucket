@@ -4,7 +4,7 @@ class PastesController < ApplicationController
   end
 
   def create
-    @paste = Paste.new(params.permit(:paste))
+    @paste = Paste.new(params.permit(paste: [:data, :burnkey])[:paste])
     if @paste.save
       respond_to do |format|
         format.js
