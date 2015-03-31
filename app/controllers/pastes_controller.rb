@@ -13,6 +13,7 @@ class PastesController < ApplicationController
   end
 
   def show
+    @paste = Paste.find(params.permit(:id)[:id])
   end
 
   def burn

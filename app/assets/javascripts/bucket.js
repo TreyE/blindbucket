@@ -289,9 +289,22 @@ function pageKey() {
 
 	return key;
 }
+
 $(function() {
 	$("#submit_paste").click(function() {
 		submitPaste();
 		return false;
+	});
+	$("#ciphertext").each(function() {
+	  showStatus("Decoding message");
+	  var ciphertext = $("#ciphertext").text();
+          var cipher_obj = JSON.parse(ciphertext);
+	  try { // Try to decrypt the paste.
+	    $("#decoded").text(zeroDecipher(pageKey(), cipher_obj));
+            $("#status").hide();
+	  } catch(err) {
+	    showError('Could not decrypt data (Wrong key ?)');
+	    return;
+	  }
 	});
 });

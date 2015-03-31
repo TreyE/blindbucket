@@ -81,5 +81,3 @@ test:
 production:
   <<: *default
   database: blindbucket_production
-  username: blindbucket
-  password: <%= ENV['BLINDBUCKET_DATABASE_PASSWORD'] %>
