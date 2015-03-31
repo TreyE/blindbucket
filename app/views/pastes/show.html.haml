@@ -1,5 +1,10 @@
 #ciphertext{:style => "display: none;"}= @paste.data
 
-#decoded
+%pre#decoded
+
+= form_for(@paste, { :method => "POST", :url => burn_paste_path(@paste) }) do |f|
+  = f.hidden_field :burnkey, :value => "", :id => "burnkey"
+  = f.submit "BURN"
+
 
 #status
