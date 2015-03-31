@@ -100,9 +100,6 @@ function zeroDecipher(key, data) {
     return decompress(sjcl.decrypt(key,data));
 }
 
-function postLocation() {
-}
-
 /**
  * @return the paste unique identifier from the URL
  *   eg. 'c05354954c49a487'
@@ -135,12 +132,13 @@ function setElementText(element, text) {
 
 function showStatus(msg, spin) {
   setElementText($('#status'), msg);
+  $('#status').show();
 }
 
 /**
  *  Send a new paste to server
  */
-function send_data() {
+function submitPaste() {
     // Do not send if no data.
     if ($('textarea#message').val().length == 0) {
         return;
@@ -150,61 +148,93 @@ function send_data() {
     if (!sjcl.random.isReady())
     {
         showStatus('Sending paste (Please move your mouse for more entropy)...', spin=true);
-        sjcl.random.addEventListener('seeded', function(){ send_data(); }); 
+        sjcl.random.addEventListener('seeded', function(){ submitPaste(); }); 
         return; 
     }
     
-    showStatus('Sending paste...', spin=true);
+    showStatus('Sending paste...'); // # , spin=true);
 
     var randomkey = sjcl.codec.base64.fromBits(sjcl.random.randomWords(8, 0), 0);
+    $('#encryption_key').val(randomkey);
     var cipherdata = zeroCipher(randomkey, $('textarea#message').val());
-    var data_to_send = { data:           cipherdata,
-                         expire:         $('select#pasteExpiration').val(),
-                         burnafterreading: $('input#burnafterreading').is(':checked') ? 1 : 0,
-                         opendiscussion: $('input#opendiscussion').is(':checked') ? 1 : 0,
-                         syntaxcoloring: $('input#syntaxcoloring').is(':checked') ? 1 : 0
-                       };
-    $.post(postLocation(), data_to_send, 'json')
-        .error(function() {
-            showError('Data could not be sent (serveur error or not responding).');
-        })
-        .success(function(data) {
-            if (data.status == 0) {
-                stateExistingPaste();
-                var url = postLocation() + "?" + data.id + '#' + randomkey;
-                var deleteUrl = postLocation() + "?pasteid=" + data.id + '&deletetoken=' + data.deletetoken;
-                showStatus('');
+    $('#ciphermessage').val(JSON.stringify(cipherdata));
+    var create_paste_form = $('#create_paste_form');
+    $.ajax({
+	    url: create_paste_form.attr('action'),
+	    type: "POST",
+	    contentType: "application/x-www-form-urlencoded; charset=utf-8",
+	    data: create_paste_form.serialize()
+    });
+}
 
-                $('div#pastelink').html('Your paste is <a id="pasteurl" href="' + url + '">' + url + '</a> <span id="copyhint">(Hit CTRL+C to copy)</span>');
-                $('div#deletelink').html('<a href="' + deleteUrl + '">Delete link</a>');
-                $('div#pasteresult').show();
-                selectText('pasteurl'); // We pre-select the link so that the user only has to CTRL+C the link.
+/**
+ *  Send a new paste to server
+ */
+function send_data() {
+	// Do not send if no data.
+	if ($('textarea#message').val().length == 0) {
+		return;
+	}
 
-                setElementText($('div#cleartext'), $('textarea#message').val());
-                urls2links($('div#cleartext'));
+	// If sjcl has not collected enough entropy yet, display a message.
+	if (!sjcl.random.isReady())
+	{
+		showStatus('Sending paste (Please move your mouse for more entropy)...', spin=true);
+		sjcl.random.addEventListener('seeded', function(){ send_data(); }); 
+		return; 
+	}
 
-                // FIXME: Add option to remove syntax highlighting ?
-                if ($('input#syntaxcoloring').is(':checked')) applySyntaxColoring();
+	showStatus('Sending paste...', spin=true);
 
-                showStatus('');
-            }
-            else if (data.status==1) {
-                showError('Could not create paste: '+data.message);
-            }
-            else {
-                showError('Could not create paste.');
-            }
-        });
+	var randomkey = sjcl.codec.base64.fromBits(sjcl.random.randomWords(8, 0), 0);
+	var cipherdata = zeroCipher(randomkey, $('textarea#message').val());
+	var data_to_send = { data:           cipherdata,
+		expire:         $('select#pasteExpiration').val(),
+		burnafterreading: $('input#burnafterreading').is(':checked') ? 1 : 0,
+		opendiscussion: $('input#opendiscussion').is(':checked') ? 1 : 0,
+		syntaxcoloring: $('input#syntaxcoloring').is(':checked') ? 1 : 0
+	};
+	$.post(postLocation(), data_to_send, 'json')
+		.error(function() {
+			showError('Data could not be sent (serveur error or not responding).');
+		})
+	.success(function(data) {
+		if (data.status == 0) {
+			stateExistingPaste();
+			var url = postLocation() + "?" + data.id + '#' + randomkey;
+			var deleteUrl = postLocation() + "?pasteid=" + data.id + '&deletetoken=' + data.deletetoken;
+			showStatus('');
+
+			$('div#pastelink').html('Your paste is <a id="pasteurl" href="' + url + '">' + url + '</a> <span id="copyhint">(Hit CTRL+C to copy)</span>');
+			$('div#deletelink').html('<a href="' + deleteUrl + '">Delete link</a>');
+			$('div#pasteresult').show();
+			selectText('pasteurl'); // We pre-select the link so that the user only has to CTRL+C the link.
+
+			setElementText($('div#cleartext'), $('textarea#message').val());
+			urls2links($('div#cleartext'));
+
+			// FIXME: Add option to remove syntax highlighting ?
+			if ($('input#syntaxcoloring').is(':checked')) applySyntaxColoring();
+
+			showStatus('');
+		}
+		else if (data.status==1) {
+			showError('Could not create paste: '+data.message);
+		}
+		else {
+			showError('Could not create paste.');
+		}
+	});
 }
 
 /** Return raw text
-  */
+*/
 function rawText()
 {
-    var paste = $('div#cleartext').html();
-    var newDoc = document.open('text/html', 'replace');
-    newDoc.write('<pre>'+paste+'</pre>');
-    newDoc.close();
+	var paste = $('div#cleartext').html();
+	var newDoc = document.open('text/html', 'replace');
+	newDoc.write('<pre>'+paste+'</pre>');
+	newDoc.close();
 }
 
 /**
@@ -212,8 +242,8 @@ function rawText()
  * (We use the same function for paste and reply to comments)
  */
 function showError(message) {
-    $('div#status').addClass('errorMessage').text(message);
-    $('div#replystatus').addClass('errorMessage').text(message);
+	$('div#status').addClass('errorMessage').text(message);
+	$('div#replystatus').addClass('errorMessage').text(message);
 }
 
 /**
@@ -229,30 +259,36 @@ function showError(message) {
  * @FIXME: add ppa & apt links.
  */
 function urls2links(element) {
-    var re = /((http|https|ftp):\/\/[\w?=&.\/-;#@~%+-]+(?![\w\s?&.\/;#~%"=-]*>))/ig;
-    element.html(element.html().replace(re,'<a href="$1" rel="nofollow">$1</a>'));
-    var re = /((magnet):[\w?=&.\/-;#@~%+-]+)/ig;
-    element.html(element.html().replace(re,'<a href="$1">$1</a>'));
+	var re = /((http|https|ftp):\/\/[\w?=&.\/-;#@~%+-]+(?![\w\s?&.\/;#~%"=-]*>))/ig;
+	element.html(element.html().replace(re,'<a href="$1" rel="nofollow">$1</a>'));
+	var re = /((magnet):[\w?=&.\/-;#@~%+-]+)/ig;
+	element.html(element.html().replace(re,'<a href="$1">$1</a>'));
 }
 
 /**
  * Return the deciphering key stored in anchor part of the URL
  */
 function pageKey() {
-    var key = window.location.hash.substring(1);  // Get key
+	var key = window.location.hash.substring(1);  // Get key
 
-    // Some stupid web 2.0 services and redirectors add data AFTER the anchor
-    // (such as &utm_source=...).
-    // We will strip any additional data.
+	// Some stupid web 2.0 services and redirectors add data AFTER the anchor
+	// (such as &utm_source=...).
+	// We will strip any additional data.
 
-    // First, strip everything after the equal sign (=) which signals end of base64 string.
-    i = key.indexOf('='); if (i>-1) { key = key.substring(0,i+1); }
+	// First, strip everything after the equal sign (=) which signals end of base64 string.
+	i = key.indexOf('='); if (i>-1) { key = key.substring(0,i+1); }
 
-    // If the equal sign was not present, some parameters may remain:
-    i = key.indexOf('&'); if (i>-1) { key = key.substring(0,i); }
+	// If the equal sign was not present, some parameters may remain:
+	i = key.indexOf('&'); if (i>-1) { key = key.substring(0,i); }
 
-    // Then add trailing equal sign if it's missing
-    if (key.charAt(key.length-1)!=='=') key+='=';
+	// Then add trailing equal sign if it's missing
+	if (key.charAt(key.length-1)!=='=') key+='=';
 
-    return key;
+	return key;
 }
+$(function() {
+	$("#submit_paste").click(function() {
+		submitPaste();
+		return false;
+	});
+});
