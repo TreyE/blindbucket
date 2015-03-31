@@ -9,7 +9,7 @@ server '54.191.72.227', user: 'nginx', roles: %w{app db web}
 # server 'example.com', user: 'deploy', roles: %w{app web}, other_property: :other_value
 # server 'db.example.com', user: 'deploy', roles: %w{db}
 
-
+set :linked_files, fetch(:linked_files, []).push('blindbucket_production')
 
 # role-based syntax
 # ==================
