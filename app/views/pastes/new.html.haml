@@ -1,7 +1,7 @@
 #paste_details
   %form{ :action => "#", :method => "POST" }
     %input{:type => "hidden", :id => "encryption_key"}
-    %textarea#message
+    %textarea#message{ :cols => 80, :rows => 25 }
       Put your message here.
     %p
       %a#submit_paste{ :href => "#" }= "Submit"
