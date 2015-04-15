@@ -3,7 +3,8 @@
     %input{:type => "hidden", :id => "encryption_key"}
     %textarea#message
       Put your message here.
-    %a#submit_paste{ :href => "#" }= "Submit"
+    %p
+      %a#submit_paste{ :href => "#" }= "Submit"
 
   = form_for(@paste, {:html => {:id => "create_paste_form"}}) do |f|
     = f.hidden_field :burnkey, { :id => "burnkey" }
