@@ -44,8 +44,6 @@ namespace :deploy do
 
   after :restart, :clear_cache do
     on roles(:web), in: :groups, limit: 3, wait: 10 do
-      exec "service unicorn_blindbucket stop"
-      exec "service unicorn_blindbucket start"
       # Here we can do anything such as:
       # within release_path do
       #   execute :rake, 'cache:clear'
@@ -53,4 +51,12 @@ namespace :deploy do
     end
   end
 
+  task :restart do
+    on roles(:app), in: :sequence, wait: 20 do
+      sudo "service unicorn_blindbucket stop"
+      sudo "service unicorn_blindbucket start"
+    end
+  end
+
+  after :publishing, :restart
 end
